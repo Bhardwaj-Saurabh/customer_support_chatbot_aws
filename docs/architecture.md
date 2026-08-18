@@ -19,13 +19,14 @@ flowchart LR
     U[Customer message] --> IN[Input node]
     IN --> C[Classifier<br/>Prompt node]
     C --> COND{Condition node<br/>exact string match}
-    COND -- "BUG" --> AG[Agent node<br/>bug-report agent]
+    COND -- "BUG" --> EX[BugExtractor<br/>Prompt node → JSON]
     COND -- "FAQ" --> FAQ[Prompt node<br/>FAQ embedded]
     COND -- default --> OTH[Prompt node<br/>phone redirect]
-    AG --> O1[Output: bug path]
+    EX --> BT[BugTool<br/>Lambda node]
+    BT --> O1[Output: bug path]
     FAQ --> O2[Output: FAQ path]
     OTH --> O3[Output: other path]
-    AG -. function call .-> L[Lambda<br/>create-bug-report]
+    BT -. invoke .-> L[Lambda<br/>create-bug-report]
     L -. PutItem .-> DB[(DynamoDB<br/>BugReports)]
 ```
 
@@ -66,9 +67,26 @@ The Condition node compares the classifier output against the literal strings `B
 
 Each branch terminates in its **own Output node** — Bedrock Flows does not allow one Output node to receive multiple incoming connections.
 
-### Bug-report path (Agent node)
+### Bug-report path
 
-A Bedrock Agent (Agents Classic) handles bug reports conversationally:
+> **Implementation note (2026-08):** AWS has placed Bedrock Agents (Classic) in
+> **maintenance mode** — accounts without prior Agents usage receive
+> `AccessDeniedException: Bedrock Agents is in Maintenance Mode` on
+> `CreateAgent`, and this project's lab account is affected. The bug path is
+> therefore implemented **without an Agent node**, as:
+>
+> `BugExtractor` Prompt node (Nova Lite, extracts `{description,
+> stepsToReproduce, environment}` as JSON) → `BugTool` **Lambda node** invoking
+> `flow-bug-tool-wrapper`, a thin adapter that translates the flow-node payload
+> into the agent-style event and invokes the unchanged `create-bug-report`
+> tool. If the extractor finds no usable description, the wrapper returns a
+> follow-up question instead of creating a ticket. Real tickets still land in
+> the `BugReports` DynamoDB table via the original Lambda.
+>
+> The original Agent-node design below is retained for reference and applies
+> to accounts where Agents Classic is still available.
+
+The original design: a Bedrock Agent (Agents Classic) handles bug reports conversationally:
 
 - **Action group** `bug-report-actions` exposes one function, `create_bug_report`, backed by the Lambda from the tool stack. Parameters: `description` (required), `stepsToReproduce` (optional), `environment` (optional).
 - **User input enabled** (Advanced settings) so the agent can ask follow-up questions when the initial report is missing details. In a flow invocation this surfaces as a `flowMultiTurnInputRequestEvent`, which the test harness treats as a terminal response for a single-turn test.
