@@ -9,4 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Credentials
+.env
+
 project.md
+
+
