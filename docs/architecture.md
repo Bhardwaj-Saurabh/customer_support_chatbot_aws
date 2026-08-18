@@ -17,8 +17,11 @@ The chatbot serves a fictional online shop. Every incoming customer message is c
 ```mermaid
 flowchart LR
     U[Customer message] --> IN[Input node]
-    IN --> C[Classifier<br/>Prompt node]
-    C --> COND{Condition node<br/>exact string match}
+    IN --> G[GuardrailGate<br/>Lambda node<br/>ApplyGuardrail]
+    G -- blocked --> OB[Output: blocked]
+    G --> C[Classifier<br/>Prompt node]
+    C --> N[LabelNormalizer<br/>Lambda node]
+    N --> COND{Condition node<br/>exact string match}
     COND -- "BUG" --> EX[BugExtractor<br/>Prompt node → JSON]
     COND -- "FAQ" --> FAQ[Prompt node<br/>FAQ embedded]
     COND -- default --> OTH[Prompt node<br/>phone redirect]
@@ -60,6 +63,14 @@ Prompt-engineering measures used to keep the output deterministic:
 - Define each category with concrete examples (bug = something on the site is broken/misbehaving; FAQ = questions about orders, shipping, returns, payments, products, account, privacy; OTHER = everything else, including small talk and off-topic requests).
 - Low temperature (0) and a small max-token budget.
 - The customer message is delimited clearly (e.g. inside tags) so instructions in the message itself are less likely to override the task — a first line of defence against prompt injection.
+
+### Guardrail gate (Lambda node, first in the flow)
+
+A Bedrock **Guardrail** (`chatbot-guardrail`, content filters for hate/violence/sexual/insults/misconduct plus PROMPT_ATTACK) screens every message before any model runs. It is applied via a `GuardrailGate` Lambda node calling `ApplyGuardrail` on the **raw customer message only** — attaching the guardrail directly to prompt nodes does not work, because the flow scans the entire rendered template and the classifier's own anti-injection instructions trip the PROMPT_ATTACK filter, blocking every request. When the guardrail intervenes, the gate returns a fixed blocked-message string that routes straight to a dedicated `BlockedOutput` node, so harmful content never reaches a model.
+
+### Label normalizer (Lambda node)
+
+Between the classifier and the router, a `LabelNormalizer` Lambda node guarantees the Condition node only ever sees a valid label: it strips whitespace/punctuation, uppercases, maps anything outside `{BUG, FAQ, OTHER}` to `OTHER`, and emits `BLOCKED` when the gate intervened. This implements the structured-output stand-out — string drift in the classifier output can no longer break routing.
 
 ### Condition node (routing)
 
@@ -185,12 +196,12 @@ The flow is invoked through an **alias** pointing at a prepared version, never a
 | **Platform question and other paths** — FAQ-embedded Prompt node that redirects when the FAQ doesn't cover the question; separate phone-redirect path | FAQ Prompt node with embedded document and fallback instruction; Other-path Prompt node |
 | **Testing and evaluation** — `flow-tests.json` covers all three paths; script produces JSONL; evaluation job created; written observations provided | Testing pipeline above; observations produced in the review step |
 
-## Stand-out extensions (planned)
+## Stand-out extensions
 
-- **Guardrail** on the flow to block harmful content and prompt-injection attempts.
-- **Edge-case test prompts** in `flow-tests.json`: ambiguous messages, very short messages ("help", "hi"), and prompt-injection attempts ("ignore your instructions and…").
-- **Structured output** for the classifier so it can only emit a valid label, removing string-drift risk entirely.
-- **Knowledge Base** (RAG over a vector index) replacing the embedded FAQ — the right move if the FAQ grows beyond a comfortably embeddable size.
+- ✅ **Guardrail** — `chatbot-guardrail` applied via the GuardrailGate Lambda node; blocks harmful content and prompt-injection attempts before any model processes the message (see above).
+- ✅ **Edge-case test prompts** in `flow-tests.json`: ambiguous messages, very short messages ("help"), prompt-injection attempts, a no-details bug report, and a harmful request.
+- ✅ **Structured output enforcement** — the LabelNormalizer Lambda node guarantees the router only receives valid labels (see above).
+- ❌ **Knowledge Base** (RAG over a vector index) — deliberately not implemented: the course scopes RAG out, the FAQ comfortably fits in the prompt, and the lab account may not permit vector-store resources.
 
 ## Cleanup
 
