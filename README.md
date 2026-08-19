@@ -117,6 +117,43 @@ aws cloudformation delete-stack --stack-name bug-report-testing-stack --region u
 
 This removes the Lambda function, DynamoDB table, IAM roles, and S3 bucket created during the project.
 
+## Submission Evidence
+
+### Classification and Routing
+
+| Evidence | Screenshot |
+|---|---|
+| Full flow diagram (all nodes, four Output nodes) | ![Flow diagram](images/flow.png) |
+| Classifier prompt node configuration | ![Classifier](images/classifier.png) |
+| Condition node exact-match expressions | ![Router conditions](images/router.png) |
+
+### Bug Report Path
+
+| Evidence | Screenshot |
+|---|---|
+| Detailed bug report → ticket created (with node trace) | ![Bug ticket](images/test-run-1.png) |
+| Vague bug report → follow-up question collecting details | ![Follow-up](images/test-run-2.png) |
+| Records in the BugReports DynamoDB table | ![DynamoDB](images/bugreport.png) |
+| Why no Agent node: `CreateAgent` maintenance-mode error | ![Agent blocked](images/agent-node.png) |
+
+### Platform Question and Other Paths
+
+| Evidence | Screenshot |
+|---|---|
+| FAQ prompt node with embedded FAQ | ![FAQ node](images/faq.png) |
+| Covered question answered from the FAQ | ![FAQ answer](images/test-run-3.png) |
+| Uncovered question → phone redirect | ![Uncovered](images/test-run-4.png) |
+| Other request → phone redirect | ![Other](images/test-run-5.png) |
+| Bonus: prompt injection blocked by the guardrail gate | ![Blocked](images/test-run-6.png) |
+
+### Testing and Evaluation
+
+| Evidence | Screenshot |
+|---|---|
+| Bedrock Evaluations results — Correctness 1.00 over 16 prompts | ![Evaluation](images/evaluation.png) |
+
+Written observations: [docs/evaluation-observations.md](docs/evaluation-observations.md) · Test suite: [src/flow-tests.json](src/flow-tests.json) · Eval dataset: [src/output_eval_dataset.jsonl](src/output_eval_dataset.jsonl)
+
 ## Built With
 
 * [Amazon Bedrock Flows](https://docs.aws.amazon.com/bedrock/latest/userguide/flows.html) - Orchestration of the LLM application
