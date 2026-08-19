@@ -11,6 +11,8 @@ Three evaluation runs were performed, iterating on the flow and the test suite b
 | `flow-eval-run-2` | v3 | 16 | 0.906 | Guardrail gate, label normalizer, stricter bug extractor; added follow-up + harmful tests |
 | `flow-eval-run-3` | v3 | 16 | **1.000** | Fixed two over-specified reference responses |
 
+**Redeployment note:** the lab AWS account was rotated after run 3, wiping all resources. The final configuration was rebuilt from scratch in the new account with `deploy_flow_resources.sh` (flow `LGVW3ASZQU`) and re-evaluated as `flow-eval-run-1` (job `diqmt0znwtv1`) in that account: **1.000 across all 16 records**, confirming the results are reproducible from the repository alone.
+
 ## Run 1 (0.964) — baseline
 
 13/14 records scored 1.0. Findings:
