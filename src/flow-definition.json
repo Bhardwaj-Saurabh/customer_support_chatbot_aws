@@ -18,7 +18,7 @@
       "type": "LambdaFunction",
       "configuration": {
         "lambdaFunction": {
-          "lambdaArn": "arn:aws:lambda:us-east-1:833698403136:function:flow-guardrail-gate"
+          "lambdaArn": "arn:aws:lambda:us-east-1:314182259346:function:flow-guardrail-gate"
         }
       },
       "inputs": [
@@ -84,7 +84,7 @@
       "type": "LambdaFunction",
       "configuration": {
         "lambdaFunction": {
-          "lambdaArn": "arn:aws:lambda:us-east-1:833698403136:function:flow-label-normalizer"
+          "lambdaArn": "arn:aws:lambda:us-east-1:314182259346:function:flow-label-normalizer"
         }
       },
       "inputs": [
@@ -187,7 +187,7 @@
       "type": "LambdaFunction",
       "configuration": {
         "lambdaFunction": {
-          "lambdaArn": "arn:aws:lambda:us-east-1:833698403136:function:flow-bug-tool-wrapper"
+          "lambdaArn": "arn:aws:lambda:us-east-1:314182259346:function:flow-bug-tool-wrapper"
         }
       },
       "inputs": [

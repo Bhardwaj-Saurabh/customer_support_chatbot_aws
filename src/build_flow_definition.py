@@ -6,6 +6,7 @@ flow-definition.json ready for `aws bedrock-agent create-flow / update-flow`.
 """
 
 import json
+import os
 from pathlib import Path
 
 HERE = Path(__file__).parent
@@ -18,15 +19,11 @@ FAQ_MODEL = "amazon.nova-lite-v1:0"
 OTHER_MODEL = "amazon.nova-micro-v1:0"
 EXTRACTOR_MODEL = "amazon.nova-lite-v1:0"
 
-WRAPPER_LAMBDA_ARN = (
-    "arn:aws:lambda:us-east-1:833698403136:function:flow-bug-tool-wrapper"
-)
-NORMALIZER_LAMBDA_ARN = (
-    "arn:aws:lambda:us-east-1:833698403136:function:flow-label-normalizer"
-)
-GATE_LAMBDA_ARN = (
-    "arn:aws:lambda:us-east-1:833698403136:function:flow-guardrail-gate"
-)
+# Account-specific ARNs come from the environment so the definition can be
+# regenerated after a lab-account rotation (see deploy_flow_resources.sh).
+WRAPPER_LAMBDA_ARN = os.environ["WRAPPER_LAMBDA_ARN"]
+NORMALIZER_LAMBDA_ARN = os.environ["NORMALIZER_LAMBDA_ARN"]
+GATE_LAMBDA_ARN = os.environ["GATE_LAMBDA_ARN"]
 
 CLASSIFIER_PROMPT = """You are a message classifier for an online shop's customer support chatbot.
 
