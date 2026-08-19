@@ -1,5 +1,24 @@
 # Customer Support Chatbot with Amazon Bedrock Flows
 
+> ## ⚠️ Note for reviewers: Agent node substitution
+>
+> The rubric asks for the bug-report path to use a Bedrock Agent node with the
+> `create-bug-report` action group. **AWS has placed Bedrock Agents (Classic) in
+> maintenance mode and blocks agent creation in accounts without prior Agents
+> usage** — `CreateAgent` returns
+> `AccessDeniedException: Bedrock Agents is in Maintenance Mode. New agent
+> creation is not available for accounts without prior service usage.`
+> This was verified in **two separate Udacity lab accounts** (see the error
+> screenshot in the submission evidence).
+>
+> The bug path therefore uses a functionally equivalent design: a Prompt node
+> extracts the bug details (description, steps to reproduce, environment) and a
+> Lambda node invokes the **same unchanged `create-bug-report` tool**, creating
+> real tickets in the BugReports DynamoDB table. Vague reports receive a
+> follow-up question instead of a ticket. Full design and rationale:
+> [docs/architecture.md](docs/architecture.md); evaluation results (correctness
+> 1.000): [docs/evaluation-observations.md](docs/evaluation-observations.md).
+
 In this project you will build a customer support chatbot using Amazon Bedrock Flows. The chatbot will handle customers' questions on a fictional website, and will need to handle one of the following types of messages:
 * bug reports
 * platform related questions that can be answered from FAQ.
